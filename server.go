@@ -8,6 +8,7 @@ import (
     "io/ioutil"
     "strings"
     "path/filepath"
+    "Roots/http"
 )
 
 const (
@@ -17,6 +18,7 @@ const (
 )
 
 func main() {
+    http.Echo()
     connectToDatabase("root","","roots")
     // Listen for incoming connections.
     l, err := net.Listen(ConnType, ConnHost+":"+ConnPort)
@@ -63,11 +65,15 @@ func handleRequest(conn net.Conn) int{
     for i := range result {
         if strings.HasPrefix(result[i], "GET") == true{
             file = strings.TrimPrefix(strings.Split(result[i], " ")[1], "/")
-            file = strings.Split(file, "?")[0]
-            if file == "" { file = "index.rsl" }
+            file = strings.Split(file, "?")[0] // To get rid of GET
+            if file == "" { file = "index.go" }
             if strings.HasPrefix(file, "http") {
                 str = file
+                fmt.Println("WTDF")
                 break
+            }
+            if strings.HasSuffix(file, ".go") {
+                
             }
             fmt.Println("FILE REQUEST: " + file)
         }
@@ -75,7 +81,7 @@ func handleRequest(conn net.Conn) int{
     }
 
     if str == "" {
-        filepathabs, er := filepath.Abs(file)
+        filepathabs, er := filepath.Abs("http/" + file)
         if er != nil {fmt.Println(er)}
         b, err := ioutil.ReadFile(filepathabs) // just pass the file name
         if err != nil {
@@ -88,14 +94,14 @@ func handleRequest(conn net.Conn) int{
     conn.Write([]byte(t.Format("Date: Mon, 02 Jan 2006 15:04:05 GMT") + "\n"))
 
 
-    if strings.HasSuffix(file, ".svg") == true { conn.Write([]byte("Content-Type: image/svg+xml \n")) }
-    if strings.HasSuffix(file, ".css") == true { conn.Write([]byte("Content-Type: text/css \n")) }
-    if strings.HasSuffix(file, ".js") == true { conn.Write([]byte("Content-Type: text/javascript \n")) }
-    if strings.HasSuffix(file, ".html") == true { conn.Write([]byte("Content-Type: text/html \n")) }
-    if strings.HasSuffix(file, ".rsl") == true { conn.Write([]byte("Content-Type: text/html \n")) }
-    if strings.HasSuffix(file, ".mp3") == true { conn.Write([]byte("Content-Type: audio/mp3 \n")) }
+    if strings.HasSuffix(file, ".svg") { conn.Write([]byte("Content-Type: image/svg+xml \n")) }
+    if strings.HasSuffix(file, ".css") { conn.Write([]byte("Content-Type: text/css \n")) }
+    if strings.HasSuffix(file, ".js") { conn.Write([]byte("Content-Type: text/javascript \n")) }
+    if strings.HasSuffix(file, ".html") { conn.Write([]byte("Content-Type: text/html \n")) }
+    if strings.HasSuffix(file, ".go") { conn.Write([]byte("Content-Type: text/html \n")) }
+    if strings.HasSuffix(file, ".mp3") { conn.Write([]byte("Content-Type: audio/mp3 \n")) }
 
-    conn.Write([]byte("Server: RlS(GoLang)\nConnection: Closed"))
+    conn.Write([]byte("Server: Roots(GoLang)\nConnection: Closed"))
     conn.Write([]byte("\n\n"))//Time for the html part
     conn.Write([]byte(str)) // HTML
     conn.Close()
